@@ -3,24 +3,24 @@ workspace "RutaColca" "Modelo C4 de RutaColca - Grupo N.º __" {
     !identifiers hierarchical
 
     model {
-        // PASO 2 · Personas: un rol humano por elemento
-        turista = person "Turista" "TODO: describa al usuario en una oración."
-        // TODO: operador de agencia, guía de turismo, administrador
-
-        // PASO 2 · El sistema en estudio (una sola caja en el contexto)
-        ruta = softwareSystem "RutaColca" "TODO: qué ofrece al negocio." {
-            // PASO 3 · Contenedores: aplicaciones y almacenes de datos
-            // nombre = container "Nombre" "Responsabilidad" "Tecnología"
-            // TODO: web del turista, portal de agencias, API, base de datos
+        turista = person "Turista" "Busca, reserva y paga tours."
+        operador = person "Operador de agencia" "Publica tours y administra salidas y reservas."
+        guia = person "Guía de turismo" "Recibe itinerarios y listas por WhatsApp."
+        administrador = person "Administrador" "Aprueba agencias y revisa ventas."
+        ruta = softwareSystem "RutaColca" "Plataforma de publicación, reservas y pagos de tours del Colca." {
         }
+        pagos = softwareSystem "Pasarela de pagos" "Procesa cobros con tarjeta o billetera móvil." "Externo"
+        whatsapp = softwareSystem "WhatsApp Business" "Entrega mensajes a los guías." "Externo"
+        autocolca = softwareSystem "Sistema de AUTOCOLCA" "Valida boletos turísticos mediante API HTTPS (supuesto didáctico)." "Externo"
 
-        // PASO 2 · Sistemas externos (etiqueta "Externo")
-        // TODO: pasarela de pagos, WhatsApp Business, sistema de AUTOCOLCA
-
-        // Relaciones: origen -> destino "Verbo + preposición" "Protocolo"
-        // TODO: complete las relaciones de los pasos 2 y 3
-
-        // PASO 7 (Parte B) · deploymentEnvironment "Produccion" { ... }
+        turista -> ruta "Consulta tours y solicita reservas en"
+        operador -> ruta "Publica tours y registra reservas en"
+        administrador -> ruta "Aprueba agencias y consulta reportes en"
+        ruta -> guia "Comunica itinerarios y listas de grupo a"
+        ruta -> pagos "Solicita cobros a"
+        ruta -> autocolca "Solicita validación de boletos a"
+        ruta -> whatsapp "Envía itinerarios y listas mediante"
+        whatsapp -> guia "Entrega itinerarios y listas a"
     }
 
     views {
@@ -28,17 +28,6 @@ workspace "RutaColca" "Modelo C4 de RutaColca - Grupo N.º __" {
             include *
             autolayout lr
         }
-
-        container ruta "Contenedores" "Diagrama de contenedores de RutaColca" {
-            include *
-            autolayout tb
-        }
-
-        // PASO 4 · dynamic ruta "Dinamico" "Reservar y pagar un tour" { ... }
-
-        // PASO 7 (Parte B) · deployment ruta "Produccion" "Despliegue" "Despliegue en producción de RutaColca" { ... }
-
-        // PASO 8 (Parte B) · container ruta "ContenedoresReto" "Contenedores con trabajo sin conexión" { ... }
 
         styles {
             element "Person" {
