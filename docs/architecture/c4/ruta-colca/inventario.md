@@ -1,26 +1,19 @@
-# E1 · Inventario C4 de RutaColca (Paso 1)
+# Inventario C4 — RutaColca
 
-Responsable: _(modelador)_ · Revisado por: _(revisor)_
-
-| Elemento del caso | Tipo C4 | Justificación (una línea) |
+| Elemento | Tipo C4 | Justificación |
 |---|---|---|
-| Turista | | |
-| Operador de agencia | | |
-| Guía de turismo | | |
-| Administrador | | |
-| RutaColca | | |
-| Pasarela de pagos | | |
-| WhatsApp Business | | |
-| Sistema de AUTOCOLCA | | |
-| Web del turista, portal de agencias, API, base de datos | | |
+| Turista | Persona | Consulta, reserva y paga tours. |
+| Operador de agencia | Persona | Publica tours y administra reservas. |
+| Guía de turismo | Persona | Recibe información por WhatsApp, aunque no ingresa directamente. |
+| Administrador | Persona | Aprueba agencias y consulta ventas. |
+| RutaColca | Sistema de software propio | Es la plataforma que se está modelando. |
+| Pasarela de pagos | Sistema externo | Procesa cobros sin almacenar tarjetas en RutaColca. |
+| WhatsApp Business | Sistema externo | Entrega comunicaciones a los guías. |
+| Sistema de AUTOCOLCA | Sistema externo | Valida boletos mediante API HTTPS supuesta para el ejercicio. |
+| Web del turista | Contenedor (aplicación) | SPA React para el turista. |
+| Portal de agencias | Contenedor (aplicación) | PWA React para operadores y administradores. |
+| API | Contenedor (aplicación) | Backend Java 21 Spring Boot. |
+| Base de datos | Contenedor (almacén de datos) | PostgreSQL 16. |
+| Almacén local de reservas | Contenedor (almacén de datos, reto) | IndexedDB en la tablet para trabajo sin conexión. |
 
-## Decisión sobre el guía de turismo
-
-¿Se incluye como persona en el contexto aunque no use la plataforma?
-
-- **Decisión:** _(pendiente)_
-- **Motivo:** _(pendiente)_
-
-## Supuestos
-
-- La validación de boletos con AUTOCOLCA es un supuesto didáctico: se modela como sistema externo con API HTTPS.
+**Decisión:** el guía aparece como persona porque recibe el resultado del sistema a través de WhatsApp, sin utilizar directamente la plataforma.
