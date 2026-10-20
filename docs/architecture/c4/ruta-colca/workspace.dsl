@@ -46,6 +46,14 @@ workspace "RutaColca" "Modelo C4 de RutaColca - Grupo N.º __" {
             include *
             autolayout tb
         }
+        dynamic ruta "Dinamico" "Reservar y pagar un tour" {
+            turista -> ruta.web "Selecciona salida e ingresa boleto"
+            ruta.web -> ruta.api "Solicita reserva con boleto"
+            ruta.api -> autocolca "Valida boleto turístico"
+            ruta.api -> pagos "Solicita cobro tras validación"
+            ruta.api -> ruta.bd "Registra reserva y actualiza cupos tras pago exitoso"
+            autolayout lr
+        }
 
         styles {
             element "Person" {
