@@ -8,6 +8,10 @@ workspace "RutaColca" "Modelo C4 de RutaColca - Grupo N.º __" {
         guia = person "Guía de turismo" "Recibe itinerarios y listas por WhatsApp."
         administrador = person "Administrador" "Aprueba agencias y revisa ventas."
         ruta = softwareSystem "RutaColca" "Plataforma de publicación, reservas y pagos de tours del Colca." {
+            web = container "Web del turista" "Permite buscar, reservar y pagar tours." "React SPA"
+            portal = container "Portal de agencias" "Permite publicar tours, registrar reservas y gestionar agencias." "React PWA"
+            api = container "API de negocio" "Gestiona tours, cupos, boletos, pagos, reservas y reportes." "Java 21 / Spring Boot"
+            bd = container "Base de datos" "Almacena agencias, tours, salidas, reservas y pagos." "PostgreSQL 16"
         }
         pagos = softwareSystem "Pasarela de pagos" "Procesa cobros con tarjeta o billetera móvil." "Externo"
         whatsapp = softwareSystem "WhatsApp Business" "Entrega mensajes a los guías." "Externo"
@@ -21,12 +25,26 @@ workspace "RutaColca" "Modelo C4 de RutaColca - Grupo N.º __" {
         ruta -> autocolca "Solicita validación de boletos a"
         ruta -> whatsapp "Envía itinerarios y listas mediante"
         whatsapp -> guia "Entrega itinerarios y listas a"
+
+        turista -> ruta.web "Busca salidas y solicita reservas en" "HTTPS"
+        operador -> ruta.portal "Gestiona tours y reservas en" "HTTPS"
+        administrador -> ruta.portal "Aprueba agencias y consulta ventas en" "HTTPS"
+        ruta.web -> ruta.api "Consulta tours y solicita reservas a" "JSON/HTTPS"
+        ruta.portal -> ruta.api "Publica tours y sincroniza reservas con" "JSON/HTTPS"
+        ruta.api -> ruta.bd "Consulta y registra tours, cupos y reservas en" "JDBC"
+        ruta.api -> autocolca "Valida el número de boleto en" "JSON/HTTPS"
+        ruta.api -> pagos "Solicita el cobro de la reserva a" "HTTPS"
+        ruta.api -> whatsapp "Envía itinerarios y listas de grupo mediante" "HTTPS"
     }
 
     views {
         systemContext ruta "Contexto" "Diagrama de contexto de RutaColca" {
             include *
             autolayout lr
+        }
+        container ruta "Contenedores" "Diagrama de contenedores de RutaColca" {
+            include *
+            autolayout tb
         }
 
         styles {
