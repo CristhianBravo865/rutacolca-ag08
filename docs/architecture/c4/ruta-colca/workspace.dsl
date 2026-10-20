@@ -12,6 +12,7 @@ workspace "RutaColca" "Modelo C4 de RutaColca - Grupo N.º __" {
             portal = container "Portal de agencias" "Permite publicar tours, registrar reservas y gestionar agencias." "React PWA"
             api = container "API de negocio" "Gestiona tours, cupos, boletos, pagos, reservas y reportes." "Java 21 / Spring Boot"
             bd = container "Base de datos" "Almacena agencias, tours, salidas, reservas y pagos." "PostgreSQL 16"
+            local = container "Almacén local de reservas" "Conserva reservas presenciales pendientes de sincronización." "IndexedDB" "Reto"
         }
         pagos = softwareSystem "Pasarela de pagos" "Procesa cobros con tarjeta o billetera móvil." "Externo"
         whatsapp = softwareSystem "WhatsApp Business" "Entrega mensajes a los guías." "Externo"
@@ -35,6 +36,30 @@ workspace "RutaColca" "Modelo C4 de RutaColca - Grupo N.º __" {
         ruta.api -> autocolca "Valida el número de boleto en" "JSON/HTTPS"
         ruta.api -> pagos "Solicita el cobro de la reserva a" "HTTPS"
         ruta.api -> whatsapp "Envía itinerarios y listas de grupo mediante" "HTTPS"
+        ruta.portal -> ruta.local "Guarda reservas presenciales pendientes en" "IndexedDB API"
+        ruta.local -> ruta.portal "Entrega reservas pendientes para sincronización a" "IndexedDB API"
+
+        production = deploymentEnvironment "Produccion" {
+            turistaDevice = deploymentNode "Dispositivo del turista" "Navegador web del turista" "Dispositivo cliente" {
+                webInstance = containerInstance ruta.web
+            }
+            agencyDevice = deploymentNode "Tablet de agencia" "Navegador con soporte PWA" "Dispositivo cliente" {
+                portalInstance = containerInstance ruta.portal
+                localInstance = containerInstance ruta.local
+            }
+            cloud = deploymentNode "Proveedor cloud" "Infraestructura de producción" "Cloud" {
+                lb = infrastructureNode "Balanceador" "Distribuye peticiones HTTPS entre réplicas de la API." "Balanceador HTTPS"
+                vm1 = deploymentNode "VM API 1" "Primera réplica" "VM con Docker" {
+                    api1 = containerInstance ruta.api
+                }
+                vm2 = deploymentNode "VM API 2" "Segunda réplica" "VM con Docker" {
+                    api2 = containerInstance ruta.api
+                }
+                managed = deploymentNode "Base de datos gestionada" "Persistencia administrada" "Servicio PostgreSQL" {
+                    dbInstance = containerInstance ruta.bd
+                }
+            }
+        }
     }
 
     views {
@@ -44,6 +69,7 @@ workspace "RutaColca" "Modelo C4 de RutaColca - Grupo N.º __" {
         }
         container ruta "Contenedores" "Diagrama de contenedores de RutaColca" {
             include *
+            exclude ruta.local
             autolayout tb
         }
         dynamic ruta "Dinamico" "Reservar y pagar un tour" {
@@ -53,6 +79,14 @@ workspace "RutaColca" "Modelo C4 de RutaColca - Grupo N.º __" {
             ruta.api -> pagos "Solicita cobro tras validación"
             ruta.api -> ruta.bd "Registra reserva y actualiza cupos tras pago exitoso"
             autolayout lr
+        }
+        deployment ruta "Produccion" "Despliegue de RutaColca en producción" {
+            include *
+            autolayout lr
+        }
+        container ruta "ContenedoresReto" "Contenedores con almacenamiento local y sincronización diferida" {
+            include *
+            autolayout tb
         }
 
         styles {
