@@ -1,0 +1,12 @@
+# Herramientas locales (cada integrante las descarga)
+structurizr.sh
+structurizr.bat
+structurizr-cli*/
+plantuml.jar
+lib/
+
+# Sistema operativo y editores
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
