@@ -1,92 +1,121 @@
 workspace "RutaColca" "Modelo C4 de RutaColca - Grupo N.º __" {
 
     !identifiers hierarchical
+    !impliedRelationships true
 
     model {
-        turista = person "Turista" "Busca, reserva y paga tours."
-        operador = person "Operador de agencia" "Publica tours y administra salidas y reservas."
-        guia = person "Guía de turismo" "Recibe itinerarios y listas por WhatsApp."
-        administrador = person "Administrador" "Aprueba agencias y revisa ventas."
-        ruta = softwareSystem "RutaColca" "Plataforma de publicación, reservas y pagos de tours del Colca." {
-            web = container "Web del turista" "Permite buscar, reservar y pagar tours." "React SPA"
-            portal = container "Portal de agencias" "Permite publicar tours, registrar reservas y gestionar agencias." "React PWA"
-            api = container "API de negocio" "Gestiona tours, cupos, boletos, pagos, reservas y reportes." "Java 21 / Spring Boot"
-            bd = container "Base de datos" "Almacena agencias, tours, salidas, reservas y pagos." "PostgreSQL 16"
-            local = container "Almacén local de reservas" "Conserva reservas presenciales pendientes de sincronización." "IndexedDB" "Reto"
+        // ---------- PASO 2 · Personas ----------
+        turista = person "Turista" "Visitante que busca tours del valle del Colca, reserva una salida y paga en línea."
+        operador = person "Operador de agencia" "Personal de una agencia de Arequipa o Chivay que publica tours, fechas y cupos."
+        guia = person "Guía de turismo" "Conduce la salida; recibe el itinerario y la lista del grupo por WhatsApp."
+        admin = person "Administrador" "Aprueba a las agencias que se registran y revisa las ventas por agencia y por mes."
+
+        // ---------- PASO 2 y 3 · Sistema en estudio y contenedores ----------
+        ruta = softwareSystem "RutaColca" "Plataforma del consorcio para publicar, reservar y pagar tours al valle del Colca." {
+            web = container "Web del turista" "Búsqueda de tours, reserva y pago." "React (SPA)"
+            portal = container "Portal de agencias" "Publicación de tours y salidas, reservas presenciales, aprobación y reportes." "React (PWA)"
+            api = container "API" "Reglas de negocio: tours, reservas, validación de boleto, cobro y avisos." "Java 21, Spring Boot"
+            db = container "Base de datos" "Tours, salidas, cupos, reservas y agencias. No guarda datos de tarjetas." "PostgreSQL 16" "Almacen"
+
+            // ---------- PASO 8 · Reto sin conexión (HU-05) ----------
+            // SUPUESTO del grupo: almacén local dentro de la PWA. Ajústenlo con su ADR-002.
+            offline = container "Almacén local de reservas" "Guarda reservas presenciales pendientes cuando no hay internet." "IndexedDB (navegador, PWA)" "Almacen"
         }
-        pagos = softwareSystem "Pasarela de pagos" "Procesa cobros con tarjeta o billetera móvil." "Externo"
-        whatsapp = softwareSystem "WhatsApp Business" "Entrega mensajes a los guías." "Externo"
-        autocolca = softwareSystem "Sistema de AUTOCOLCA" "Valida boletos turísticos mediante API HTTPS (supuesto didáctico)." "Externo"
 
-        turista -> ruta "Consulta tours y solicita reservas en"
-        operador -> ruta "Publica tours y registra reservas en"
-        administrador -> ruta "Aprueba agencias y consulta reportes en"
-        ruta -> guia "Comunica itinerarios y listas de grupo a"
-        ruta -> pagos "Solicita cobros a"
-        ruta -> autocolca "Solicita validación de boletos a"
-        ruta -> whatsapp "Envía itinerarios y listas mediante"
-        whatsapp -> guia "Entrega itinerarios y listas a"
+        // ---------- PASO 2 · Sistemas externos ----------
+        pasarela = softwareSystem "Pasarela de pagos" "Sistema externo que procesa pagos con tarjeta y billetera móvil." "Externo"
+        whatsapp = softwareSystem "WhatsApp Business" "Sistema externo de mensajería para enviar itinerarios y listas de grupo a los guías." "Externo"
+        autocolca = softwareSystem "Sistema de AUTOCOLCA" "Sistema externo que emite y valida el boleto turístico del Colca (supuesto didáctico, API HTTPS)." "Externo"
 
-        turista -> ruta.web "Busca salidas y solicita reservas en" "HTTPS"
-        operador -> ruta.portal "Gestiona tours y reservas en" "HTTPS"
-        administrador -> ruta.portal "Aprueba agencias y consulta ventas en" "HTTPS"
-        ruta.web -> ruta.api "Consulta tours y solicita reservas a" "JSON/HTTPS"
-        ruta.portal -> ruta.api "Publica tours y sincroniza reservas con" "JSON/HTTPS"
-        ruta.api -> ruta.bd "Consulta y registra tours, cupos y reservas en" "JDBC"
-        ruta.api -> autocolca "Valida el número de boleto en" "JSON/HTTPS"
-        ruta.api -> pagos "Solicita el cobro de la reserva a" "HTTPS"
-        ruta.api -> whatsapp "Envía itinerarios y listas de grupo mediante" "HTTPS"
-        ruta.portal -> ruta.local "Guarda reservas presenciales pendientes en" "IndexedDB API"
-        ruta.local -> ruta.portal "Entrega reservas pendientes para sincronización a" "IndexedDB API"
+        // ---------- Relaciones (origen -> destino "Verbo + preposición" "Protocolo") ----------
+        turista -> ruta.web "Reserva y paga tours en" "HTTPS"
+        operador -> ruta.portal "Publica tours y registra reservas en" "HTTPS"
+        admin -> ruta.portal "Aprueba agencias y consulta ventas en" "HTTPS"
 
-        production = deploymentEnvironment "Produccion" {
-            turistaDevice = deploymentNode "Dispositivo del turista" "Navegador web del turista" "Dispositivo cliente" {
-                webInstance = containerInstance ruta.web
-            }
-            agencyDevice = deploymentNode "Tablet de agencia" "Navegador con soporte PWA" "Dispositivo cliente" {
-                portalInstance = containerInstance ruta.portal
-                localInstance = containerInstance ruta.local
-            }
-            cloud = deploymentNode "Proveedor cloud" "Infraestructura de producción" "Cloud" {
-                lb = infrastructureNode "Balanceador" "Distribuye peticiones HTTPS entre réplicas de la API." "Balanceador HTTPS"
-                vm1 = deploymentNode "VM API 1" "Primera réplica" "VM con Docker" {
-                    api1 = containerInstance ruta.api
+        ruta.web -> ruta.api "Envía reservas y pagos a" "JSON/HTTPS"
+        ruta.portal -> ruta.api "Envía tours y reservas a" "JSON/HTTPS"
+        ruta.api -> ruta.db "Lee y escribe datos en" "JDBC"
+        ruta.api -> pasarela "Cobra las reservas en" "HTTPS"
+        ruta.api -> autocolca "Valida boletos turísticos en" "HTTPS"
+        ruta.api -> whatsapp "Envía itinerarios por" "HTTPS"
+        whatsapp -> guia "Entrega el itinerario y la lista del grupo a" "WhatsApp"
+
+        // Reto sin conexión
+        ruta.portal -> ruta.offline "Guarda reservas pendientes en" "IndexedDB"
+        ruta.portal -> ruta.api "Sincroniza reservas pendientes con" "JSON/HTTPS"
+
+        // ---------- PASO 7 · Despliegue en producción ----------
+        produccion = deploymentEnvironment "Produccion" {
+            celular = deploymentNode "Celular del turista" "" "Android / iOS" {
+                navegador = deploymentNode "Navegador web" "" "Chrome / Safari" {
+                    webInst = containerInstance ruta.web
                 }
-                vm2 = deploymentNode "VM API 2" "Segunda réplica" "VM con Docker" {
-                    api2 = containerInstance ruta.api
+            }
+            tablet = deploymentNode "Tablet de la agencia" "" "Android / iPadOS" {
+                navegador = deploymentNode "Navegador web" "" "Chrome" {
+                    portalInst = containerInstance ruta.portal
+                    offlineInst = containerInstance ruta.offline
                 }
-                managed = deploymentNode "Base de datos gestionada" "Persistencia administrada" "Servicio PostgreSQL" {
-                    dbInstance = containerInstance ruta.bd
+            }
+            cloud = deploymentNode "Proveedor cloud" "" "Cloud + Docker" {
+                lb = infrastructureNode "Balanceador de carga" "Termina TLS y reparte el tráfico entre las VM." "Balanceador gestionado"
+                vm = deploymentNode "VM Ubuntu 24.04 (x2)" "Réplicas de la API para temporada alta." "Ubuntu 24.04, Docker" 2 {
+                    apiInst = containerInstance ruta.api
+                }
+                bd = deploymentNode "BD gestionada" "" "PostgreSQL 16 gestionado" {
+                    dbInst = containerInstance ruta.db
                 }
             }
         }
+
+        // Relaciones entre nodos: fuera del bloque del entorno
+        produccion.cloud.lb -> produccion.cloud.vm.apiInst "Reenvía las peticiones a" "HTTPS"
     }
 
     views {
-        systemContext ruta "Contexto" "Diagrama de contexto de RutaColca" {
+        systemContext ruta "Contexto" {
+            title "Diagrama de contexto de RutaColca"
+            description "RutaColca como una sola caja, con sus usuarios y sistemas externos."
             include *
+            include guia
+            exclude ruta.offline
             autolayout lr
         }
-        container ruta "Contenedores" "Diagrama de contenedores de RutaColca" {
+
+        container ruta "Contenedores" {
+            title "Diagrama de contenedores de RutaColca"
+            description "Aplicaciones y almacenes de datos del ADR-001."
             include *
-            exclude ruta.local
+            include guia
+            exclude ruta.offline
             autolayout tb
         }
+
+        container ruta "ContenedoresReto" {
+            title "Diagrama de contenedores de RutaColca - Reto sin conexión (HU-05)"
+            description "Incluye el almacén local para registrar reservas sin internet."
+            include *
+            include guia
+            autolayout tb
+        }
+
+        // ---------- PASO 4 · Dinámico (validar el boleto ANTES de cobrar) ----------
         dynamic ruta "Dinamico" "Reservar y pagar un tour" {
-            turista -> ruta.web "Selecciona salida e ingresa boleto"
-            ruta.web -> ruta.api "Solicita reserva con boleto"
-            ruta.api -> autocolca "Valida boleto turístico"
-            ruta.api -> pagos "Solicita cobro tras validación"
-            ruta.api -> ruta.bd "Registra reserva y actualiza cupos tras pago exitoso"
+            title "Diagrama dinámico de RutaColca - Reservar y pagar un tour (HU-02, HU-03)"
+            turista -> ruta.web "Elige la salida, registra su boleto y paga"
+            ruta.web -> ruta.api "Envía la reserva y el pago a"
+            ruta.api -> autocolca "Valida el boleto turístico en"
+            ruta.api -> pasarela "Cobra la reserva en"
+            ruta.api -> ruta.db "Guarda la reserva confirmada en"
+            ruta.api -> whatsapp "Envía el itinerario por"
             autolayout lr
         }
-        deployment ruta "Produccion" "Despliegue de RutaColca en producción" {
+
+        deployment ruta "Produccion" "Despliegue" {
+            title "Diagrama de despliegue de RutaColca - Producción"
+            description "Dónde corre cada contenedor y con qué infraestructura."
             include *
             autolayout lr
-        }
-        container ruta "ContenedoresReto" "Contenedores con almacenamiento local y sincronización diferida" {
-            include *
-            autolayout tb
         }
 
         styles {
@@ -102,6 +131,9 @@ workspace "RutaColca" "Modelo C4 de RutaColca - Grupo N.º __" {
             element "Container" {
                 background #0E7D73
                 color #ffffff
+            }
+            element "Almacen" {
+                shape Cylinder
             }
             element "Externo" {
                 background #8C8C8C

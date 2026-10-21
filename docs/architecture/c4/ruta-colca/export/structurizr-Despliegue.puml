@@ -1,0 +1,55 @@
+@startuml
+title <size:24>Diagrama de despliegue de RutaColca - Producción</size>\n<size:24>Dónde corre cada contenedor y con qué infraestructura.</size>
+
+set separator none
+left to right direction
+
+<style>
+  root {
+    BackgroundColor: #ffffff
+    FontColor: #444444
+  }
+</style>
+
+!include <C4/C4>
+!include <C4/C4_Context>
+!include <C4/C4_Container>
+!include <C4/C4_Deployment>
+
+Deployment_Node(Produccion.Celulardelturista, "Celular del turista", $type="Android / iOS", $descr="", $tags="", $link="") {
+  Deployment_Node(Produccion.Celulardelturista.Navegadorweb, "Navegador web", $type="Chrome / Safari", $descr="", $tags="", $link="") {
+    Container(Produccion.Celulardelturista.Navegadorweb.Webdelturista_1, "Web del turista", $techn="React (SPA)", $descr="Búsqueda de tours, reserva y pago.", $tags="", $link="")
+  }
+
+}
+
+Deployment_Node(Produccion.Tabletdelaagencia, "Tablet de la agencia", $type="Android / iPadOS", $descr="", $tags="", $link="") {
+  Deployment_Node(Produccion.Tabletdelaagencia.Navegadorweb, "Navegador web", $type="Chrome", $descr="", $tags="", $link="") {
+    Container(Produccion.Tabletdelaagencia.Navegadorweb.Portaldeagencias_1, "Portal de agencias", $techn="React (PWA)", $descr="Publicación de tours y salidas, reservas presenciales, aprobación y reportes.", $tags="", $link="")
+    ContainerDb(Produccion.Tabletdelaagencia.Navegadorweb.Almacénlocaldereservas_1, "Almacén local de reservas", $techn="IndexedDB (navegador, PWA)", $descr="Guarda reservas presenciales pendientes cuando no hay internet.", $tags="", $link="")
+  }
+
+}
+
+Deployment_Node(Produccion.Proveedorcloud, "Proveedor cloud", $type="Cloud + Docker", $descr="", $tags="", $link="") {
+  Deployment_Node(Produccion.Proveedorcloud.Balanceadordecarga, "Balanceador de carga", $type="Balanceador gestionado", $descr="Termina TLS y reparte el tráfico entre las VM.", $tags="", $link="")
+  Deployment_Node(Produccion.Proveedorcloud.VMUbuntu2404x2, "VM Ubuntu 24.04 (x2)", $type="Ubuntu 24.04, Docker", $descr="Réplicas de la API para temporada alta.", $tags="", $link="") {
+    Container(Produccion.Proveedorcloud.VMUbuntu2404x2.API_1, "API", $techn="Java 21, Spring Boot", $descr="Reglas de negocio: tours, reservas, validación de boleto, cobro y avisos.", $tags="", $link="")
+  }
+
+  Deployment_Node(Produccion.Proveedorcloud.BDgestionada, "BD gestionada", $type="PostgreSQL 16 gestionado", $descr="", $tags="", $link="") {
+    ContainerDb(Produccion.Proveedorcloud.BDgestionada.Basededatos_1, "Base de datos", $techn="PostgreSQL 16", $descr="Tours, salidas, cupos, reservas y agencias. No guarda datos de tarjetas.", $tags="", $link="")
+  }
+
+}
+
+Rel(Produccion.Tabletdelaagencia.Navegadorweb.Portaldeagencias_1, Produccion.Tabletdelaagencia.Navegadorweb.Almacénlocaldereservas_1, "Guarda reservas pendientes en", $techn="IndexedDB", $tags="", $link="")
+Rel(Produccion.Celulardelturista.Navegadorweb.Webdelturista_1, Produccion.Proveedorcloud.VMUbuntu2404x2.API_1, "Envía reservas y pagos a", $techn="JSON/HTTPS", $tags="", $link="")
+Rel(Produccion.Tabletdelaagencia.Navegadorweb.Portaldeagencias_1, Produccion.Proveedorcloud.VMUbuntu2404x2.API_1, "Envía tours y reservas a", $techn="JSON/HTTPS", $tags="", $link="")
+Rel(Produccion.Tabletdelaagencia.Navegadorweb.Portaldeagencias_1, Produccion.Proveedorcloud.VMUbuntu2404x2.API_1, "Sincroniza reservas pendientes con", $techn="JSON/HTTPS", $tags="", $link="")
+Rel(Produccion.Proveedorcloud.VMUbuntu2404x2.API_1, Produccion.Proveedorcloud.BDgestionada.Basededatos_1, "Lee y escribe datos en", $techn="JDBC", $tags="", $link="")
+Rel(Produccion.Proveedorcloud.Balanceadordecarga, Produccion.Proveedorcloud.VMUbuntu2404x2.API_1, "Reenvía las peticiones a", $techn="HTTPS", $tags="", $link="")
+
+SHOW_LEGEND(true)
+hide stereotypes
+@enduml

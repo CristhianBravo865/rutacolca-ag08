@@ -1,0 +1,36 @@
+@startuml
+title <size:24>Diagrama de contexto de RutaColca</size>\n<size:24>RutaColca como una sola caja, con sus usuarios y sistemas externos.</size>
+
+set separator none
+left to right direction
+
+<style>
+  root {
+    BackgroundColor: #ffffff
+    FontColor: #444444
+  }
+</style>
+
+!include <C4/C4>
+!include <C4/C4_Context>
+
+Person(Turista, "Turista", $descr="Visitante que busca tours del valle del Colca, reserva una salida y paga en línea.", $tags="", $link="")
+System(Pasareladepagos, "Pasarela de pagos", $descr="Sistema externo que procesa pagos con tarjeta y billetera móvil.", $tags="", $link="")
+System(WhatsAppBusiness, "WhatsApp Business", $descr="Sistema externo de mensajería para enviar itinerarios y listas de grupo a los guías.", $tags="", $link="")
+System(SistemadeAUTOCOLCA, "Sistema de AUTOCOLCA", $descr="Sistema externo que emite y valida el boleto turístico del Colca (supuesto didáctico, API HTTPS).", $tags="", $link="")
+Person(Operadordeagencia, "Operador de agencia", $descr="Personal de una agencia de Arequipa o Chivay que publica tours, fechas y cupos.", $tags="", $link="")
+Person(Guíadeturismo, "Guía de turismo", $descr="Conduce la salida; recibe el itinerario y la lista del grupo por WhatsApp.", $tags="", $link="")
+Person(Administrador, "Administrador", $descr="Aprueba a las agencias que se registran y revisa las ventas por agencia y por mes.", $tags="", $link="")
+System(RutaColca, "RutaColca", $descr="Plataforma del consorcio para publicar, reservar y pagar tours al valle del Colca.", $tags="", $link="")
+
+Rel(Turista, RutaColca, "Reserva y paga tours en", $techn="HTTPS", $tags="", $link="")
+Rel(Operadordeagencia, RutaColca, "Publica tours y registra reservas en", $techn="HTTPS", $tags="", $link="")
+Rel(Administrador, RutaColca, "Aprueba agencias y consulta ventas en", $techn="HTTPS", $tags="", $link="")
+Rel(RutaColca, Pasareladepagos, "Cobra las reservas en", $techn="HTTPS", $tags="", $link="")
+Rel(RutaColca, SistemadeAUTOCOLCA, "Valida boletos turísticos en", $techn="HTTPS", $tags="", $link="")
+Rel(RutaColca, WhatsAppBusiness, "Envía itinerarios por", $techn="HTTPS", $tags="", $link="")
+Rel(WhatsAppBusiness, Guíadeturismo, "Entrega el itinerario y la lista del grupo a", $techn="WhatsApp", $tags="", $link="")
+
+SHOW_LEGEND(true)
+hide stereotypes
+@enduml

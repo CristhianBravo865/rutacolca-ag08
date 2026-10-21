@@ -1,0 +1,38 @@
+@startuml
+title <size:24>Diagrama dinámico de RutaColca - Reservar y pagar un tour (HU-02, HU-03)</size>\n<size:24>Reservar y pagar un tour</size>
+
+set separator none
+left to right direction
+
+<style>
+  root {
+    BackgroundColor: #ffffff
+    FontColor: #444444
+  }
+</style>
+
+!include <C4/C4>
+!include <C4/C4_Context>
+!include <C4/C4_Container>
+
+System_Boundary("RutaColca_boundary", "RutaColca", $tags="") {
+  Container(RutaColca.Webdelturista, "Web del turista", $techn="React (SPA)", $descr="Búsqueda de tours, reserva y pago.", $tags="", $link="")
+  Container(RutaColca.API, "API", $techn="Java 21, Spring Boot", $descr="Reglas de negocio: tours, reservas, validación de boleto, cobro y avisos.", $tags="", $link="")
+  ContainerDb(RutaColca.Basededatos, "Base de datos", $techn="PostgreSQL 16", $descr="Tours, salidas, cupos, reservas y agencias. No guarda datos de tarjetas.", $tags="", $link="")
+}
+
+Person(Turista, "Turista", $descr="Visitante que busca tours del valle del Colca, reserva una salida y paga en línea.", $tags="", $link="")
+System(Pasareladepagos, "Pasarela de pagos", $descr="Sistema externo que procesa pagos con tarjeta y billetera móvil.", $tags="", $link="")
+System(WhatsAppBusiness, "WhatsApp Business", $descr="Sistema externo de mensajería para enviar itinerarios y listas de grupo a los guías.", $tags="", $link="")
+System(SistemadeAUTOCOLCA, "Sistema de AUTOCOLCA", $descr="Sistema externo que emite y valida el boleto turístico del Colca (supuesto didáctico, API HTTPS).", $tags="", $link="")
+
+Rel(Turista, RutaColca.Webdelturista, "1: Elige la salida, registra su boleto y paga", $techn="HTTPS", $tags="", $link="")
+Rel(RutaColca.Webdelturista, RutaColca.API, "2: Envía la reserva y el pago a", $techn="JSON/HTTPS", $tags="", $link="")
+Rel(RutaColca.API, SistemadeAUTOCOLCA, "3: Valida el boleto turístico en", $techn="HTTPS", $tags="", $link="")
+Rel(RutaColca.API, Pasareladepagos, "4: Cobra la reserva en", $techn="HTTPS", $tags="", $link="")
+Rel(RutaColca.API, RutaColca.Basededatos, "5: Guarda la reserva confirmada en", $techn="JDBC", $tags="", $link="")
+Rel(RutaColca.API, WhatsAppBusiness, "6: Envía el itinerario por", $techn="HTTPS", $tags="", $link="")
+
+SHOW_LEGEND(true)
+hide stereotypes
+@enduml
