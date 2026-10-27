@@ -143,4 +143,4 @@ git commit -m "docs(ag09): analizar cinco escenarios de patrones"
 git push -u origin ag09/analisis
 ```
 
-Abrir un PR hacia `main`. Enviarle al integrante 2 la tabla de la sección 4 y al integrante 3 los puntos de contraste de la sección 5. El integrante 4 puede integrar este documento tras su revisión. **No se realizaron commits ni cambios remotos desde esta entrega.**
+Abrir un PR hacia `main`. Enviarle al integrante 2 la tabla de la sección 4 y al integrante 3 los puntos de contraste de la sección 5. El integrante 4 puede integrar este documento tras su revisión. 
