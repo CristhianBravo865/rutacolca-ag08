@@ -1,0 +1,31 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+interface ITarifaStrategy {
+    + calcularPrecio(precioBase: double): double
+}
+
+class TarifaRegular {
+    + calcularPrecio(precioBase: double): double
+}
+
+class TarifaTemporadaAlta {
+    + calcularPrecio(precioBase: double): double
+}
+
+class TarifaEstudiante {
+    + calcularPrecio(precioBase: double): double
+}
+
+class CalculadorPrecioContexto {
+    - estrategia: ITarifaStrategy
+    + setEstrategia(estrategia: ITarifaStrategy): void
+    + ejecutarCalculo(precioBase: double): double
+}
+
+ITarifaStrategy <|.. TarifaRegular
+ITarifaStrategy <|.. TarifaTemporadaAlta
+ITarifaStrategy <|.. TarifaEstudiante
+CalculadorPrecioContexto o--> ITarifaStrategy : usa
+
+@enduml
