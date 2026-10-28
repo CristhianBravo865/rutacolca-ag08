@@ -1,0 +1,41 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+interface IObserver {
+    + actualizar(mensaje: String): void
+}
+
+interface ISubject {
+    + registrarObservador(o: IObserver): void
+    + eliminarObservador(o: IObserver): void
+    + notificarObservadores(): void
+}
+
+class ReservaColca {
+    - observadores: List<IObserver>
+    - estadoReserva: String
+    + registrarObservador(o: IObserver): void
+    + eliminarObservador(o: IObserver): void
+    + notificarObservadores(): void
+    + cambiarEstado(nuevoEstado: String): void
+}
+
+class TuristaNotificador {
+    + actualizar(mensaje: String): void
+}
+
+class GuiaNotificador {
+    + actualizar(mensaje: String): void
+}
+
+class AgenciaNotificador {
+    + actualizar(mensaje: String): void
+}
+
+ISubject <|.. ReservaColca
+IObserver <|.. TuristaNotificador
+IObserver <|.. GuiaNotificador
+IObserver <|.. AgenciaNotificador
+ReservaColca --> IObserver : notifica a >
+
+@enduml
