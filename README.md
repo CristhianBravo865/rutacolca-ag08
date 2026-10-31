@@ -1,4 +1,4 @@
-#RutaColca · Modelo C4 (Caso práctico grupal AG08 - AG09 - AG10)
+# RutaColca · Modelo C4 (Caso práctico grupal AG08 - AG09 - AG10)
 
 Construcción de Software (1703243) · 2026-B · EPIS-UNSA
 
