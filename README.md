@@ -1,35 +1,13 @@
-# RutaColca · Modelo C4 (Caso práctico grupal AG-08)
+#RutaColca · Modelo C4 (Caso práctico grupal AG08 - AG09 - AG10)
 
 Construcción de Software (1703243) · 2026-B · EPIS-UNSA
 
 ## Integrantes y roles
 
-| Integrante | Rol Parte A | Rol Parte B |
-|---|---|---|
-| Fernando Gerson Luque Guevara | Modelador y revisor | Por asignar al rotar los roles |
-| Giovani Angel Mendoza Contreras | Redactor del DSL | Por asignar al rotar los roles |
-| Cristhian Matias Bravo Arredondo | Vocero | Por asignar al rotar los roles |
+| Integrante | Rol |
+|---|---|
+| Fernando Gerson Luque Guevara | Facilitador ADD |
+| Giovani Angel Mendoza Contreras | Arquitecto |
+| Cristhian Matias Bravo Arredondo | Evaluador/Desarrollador |
+| Diego Hans Schreiber Landeo | Modelador C4 |
 
-## Entregables
-
-| Código | Archivo | Parte |
-|---|---|---|
-| E1 | [`inventario.md`](docs/architecture/c4/ruta-colca/inventario.md) | A |
-| E2 | [`workspace.dsl`](docs/architecture/c4/ruta-colca/workspace.dsl) (contexto, contenedores, dinámico) | A |
-| E3 | [`revision-cruzada.md`](docs/architecture/c4/ruta-colca/revision-cruzada.md) y [`explicacion.md`](docs/architecture/c4/ruta-colca/explicacion.md) | A |
-| E4 | `workspace.dsl` con despliegue y vista `ContenedoresReto` | B |
-| E5 | [`ADR-002-trabajo-sin-conexion.md`](docs/architecture/adr/ADR-002-trabajo-sin-conexion.md) | B |
-| E6 | [`export/`](docs/architecture/c4/ruta-colca/export/) (C4-PlantUML, Mermaid y PNG en `img/`) | B |
-| E7 | [`bitacora-ia.md`](docs/architecture/c4/ruta-colca/bitacora-ia.md) | A y B |
-
-## Validar y exportar
-
-Desde la raíz del repositorio, con la Structurizr CLI y `plantuml.jar` disponibles:
-
-```bash
-./scripts/validar-exportar.sh
-```
-
-El modelo debe validar sin errores antes de subir el commit final.
-
-**Nota sobre los PNG:** la exportación a C4-PlantUML no toma el estilo gris de la etiqueta «Externo», así que en los PNG los sistemas externos salen del mismo color que RutaColca. Para distinguirlos, sus descripciones empiezan con «Sistema externo». En el visor de Structurizr sí se ven en gris.
