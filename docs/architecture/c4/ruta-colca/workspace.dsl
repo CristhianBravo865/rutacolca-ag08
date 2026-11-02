@@ -110,7 +110,12 @@ workspace "RutaColca" "Modelo C4 de RutaColca - Grupo N.º __" {
             include guia
             autolayout tb
         }
-
+        component ruta.api "ComponentesPagosE2" {
+        title "Componentes de la API para recuperación de pagos E2"
+        description "Descomposición interna del monolito modular, sin servicios nuevos."
+        include *
+        autolayout lr
+        }
         // ---------- PASO 4 · Dinámico (validar el boleto ANTES de cobrar) ----------
         dynamic ruta "Dinamico" "Reservar y pagar un tour" {
             title "Diagrama dinámico de RutaColca - Reservar y pagar un tour (HU-02, HU-03)"
