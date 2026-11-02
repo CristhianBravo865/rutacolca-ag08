@@ -45,7 +45,7 @@ Sirven para responder las preguntas que otro grupo nos haga sobre ADR-003.
 
 Verificado contra [`src/ag10/PagoResiliente.java`](../../../../src/ag10/PagoResiliente.java):
 
-- [x] Los estados de la POC (`PENDIENTE`, `INCIERTO`, `CONFIRMADO`, `RECHAZADO`) coinciden con los de ADR-003.
+- [x] Los estados `PENDIENTE`, `INCIERTO` y `CONFIRMADO` de la POC coinciden con ADR-003; `RECHAZADO` proviene de `alternativas.md`, y la POC lo declara pero no ejercita ese caso.
 - [x] La POC consulta `estaPagado(clave)` **antes** de `cobrar(clave)` y vuelve a consultar tras una respuesta incierta.
 - [x] La prueba cubre caída de 15 min, confirmación ≤ 30 min tras la recuperación y respuesta perdida sin doble cobro.
 - [ ] No cubre persistencia en PostgreSQL, reinicios ni concurrencia entre 2 réplicas (límite declarado de la POC).
