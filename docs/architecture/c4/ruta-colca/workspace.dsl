@@ -122,7 +122,22 @@ workspace "RutaColca" "Modelo C4 de RutaColca - Grupo N.º __" {
             ruta.api -> whatsapp "Envía el itinerario por"
             autolayout lr
         }
+        // AG-10 E2: la caída no equivale a pago rechazado ni confirmado.
+        dynamic ruta "PagoConPasarelaCaida" "Caída de pasarela y recuperación de pagos (E2)" {
+            title "AG-10 E2 — Pago durante caída y reconciliación"
+            description "Persistir el estado, evitar confirmaciones inciertas y reconciliar tras la recuperación."
 
+            turista -> ruta.web "Inicia una reserva y solicita pago"
+            ruta.web -> ruta.api "Solicita registrar la reserva y procesar pago"
+            ruta.api -> autocolca "Valida el boleto antes de cobrar"
+            ruta.api -> ruta.db "Guarda reserva e intento PENDIENTE"
+            ruta.api -> pasarela "Intenta el cobro; no recibe respuesta"
+            ruta.api -> ruta.db "Conserva estado INCIERTO para conciliación"
+            ruta.api -> pasarela "Tras recuperación, consulta por la misma clave idempotente"
+            ruta.api -> ruta.db "Confirma solo el pago verificado y actualiza la reserva"
+
+            autolayout lr
+        }
         deployment ruta "Produccion" "Despliegue" {
             title "Diagrama de despliegue de RutaColca - Producción"
             description "Dónde corre cada contenedor y con qué infraestructura."
