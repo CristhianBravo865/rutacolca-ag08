@@ -14,7 +14,13 @@ workspace "RutaColca" "Modelo C4 de RutaColca - Grupo N.º __" {
         ruta = softwareSystem "RutaColca" "Plataforma del consorcio para publicar, reservar y pagar tours al valle del Colca." {
             web = container "Web del turista" "Búsqueda de tours, reserva y pago." "React (SPA)"
             portal = container "Portal de agencias" "Publicación de tours y salidas, reservas presenciales, aprobación y reportes." "React (PWA)"
-            api = container "API" "Reglas de negocio: tours, reservas, validación de boleto, cobro y avisos." "Java 21, Spring Boot"
+            api = container "API" "Monolito modular: tours, reservas, validación, pagos y conciliación de cobros." "Java 21, Spring Boot" {
+            reservas = component "Reservas" "Administra estados de reservas y confirmación tras pago verificado." "Módulo Java"
+            pagos = component "Pagos / PasarelaPago" "Inicia cobros con clave idempotente y consulta el estado del proveedor." "Módulo Java"
+            conciliador = component "ConciliadorPagos" "Recupera estados inciertos, consulta la pasarela y confirma solo pagos demostrados." "Tarea programada Java"
+    intentos = component "RegistroIntentosPago" "Persiste intentos y estados de pago en PostgreSQL." "Repositorio Java"
+}
+```
             db = container "Base de datos" "Tours, salidas, cupos, reservas y agencias. No guarda datos de tarjetas." "PostgreSQL 16" "Almacen"
 
             // ---------- PASO 8 · Reto sin conexión (HU-05) ----------
@@ -43,7 +49,13 @@ workspace "RutaColca" "Modelo C4 de RutaColca - Grupo N.º __" {
         // Reto sin conexión
         ruta.portal -> ruta.offline "Guarda reservas pendientes en" "IndexedDB"
         ruta.portal -> ruta.api "Sincroniza reservas pendientes con" "JSON/HTTPS"
-
+        ruta.api.reservas -> ruta.api.pagos "Solicita iniciar o consultar un pago"
+        ruta.api.pagos -> ruta.api.intentos "Registra intento y estado"
+        ruta.api.conciliador -> ruta.api.intentos "Lee intentos pendientes e inciertos"
+        ruta.api.conciliador -> ruta.api.pagos "Reconsulta o reintenta con la misma clave"
+        ruta.api.pagos -> pasarela "Consulta y cobra mediante HTTPS con idempotencia" "HTTPS"
+        ruta.api.intentos -> ruta.db "Persiste estados de intentos de pago" "JDBC"
+        ruta.api.conciliador -> ruta.api.reservas "Confirma reservas con pago verificado"
         // ---------- PASO 7 · Despliegue en producción ----------
         produccion = deploymentEnvironment "Produccion" {
             celular = deploymentNode "Celular del turista" "" "Android / iOS" {
@@ -98,7 +110,12 @@ workspace "RutaColca" "Modelo C4 de RutaColca - Grupo N.º __" {
             include guia
             autolayout tb
         }
-
+        component ruta.api "ComponentesPagosE2" {
+        title "Componentes de la API para recuperación de pagos E2"
+        description "Descomposición interna del monolito modular, sin servicios nuevos."
+        include *
+        autolayout lr
+        }
         // ---------- PASO 4 · Dinámico (validar el boleto ANTES de cobrar) ----------
         dynamic ruta "Dinamico" "Reservar y pagar un tour" {
             title "Diagrama dinámico de RutaColca - Reservar y pagar un tour (HU-02, HU-03)"
@@ -110,7 +127,22 @@ workspace "RutaColca" "Modelo C4 de RutaColca - Grupo N.º __" {
             ruta.api -> whatsapp "Envía el itinerario por"
             autolayout lr
         }
+        // AG-10 E2: la caída no equivale a pago rechazado ni confirmado.
+        dynamic ruta "PagoConPasarelaCaida" "Caída de pasarela y recuperación de pagos (E2)" {
+            title "AG-10 E2 — Pago durante caída y reconciliación"
+            description "Persistir el estado, evitar confirmaciones inciertas y reconciliar tras la recuperación."
 
+            turista -> ruta.web "Inicia una reserva y solicita pago"
+            ruta.web -> ruta.api "Solicita registrar la reserva y procesar pago"
+            ruta.api -> autocolca "Valida el boleto antes de cobrar"
+            ruta.api -> ruta.db "Guarda reserva e intento PENDIENTE"
+            ruta.api -> pasarela "Intenta el cobro; no recibe respuesta"
+            ruta.api -> ruta.db "Conserva estado INCIERTO para conciliación"
+            ruta.api -> pasarela "Tras recuperación, consulta por la misma clave idempotente"
+            ruta.api -> ruta.db "Confirma solo el pago verificado y actualiza la reserva"
+
+            autolayout lr
+        }
         deployment ruta "Produccion" "Despliegue" {
             title "Diagrama de despliegue de RutaColca - Producción"
             description "Dónde corre cada contenedor y con qué infraestructura."
